@@ -10,32 +10,29 @@ API_KEY = os.getenv("RIOT_API_KEY")
 HEADERS = {"X-Riot-Token": API_KEY}
 
 # Replace this with your actual summoner list
-summoner_names = [
-    "AshyBoyy",
-    "Gunyong",
-    "ChubbyPug"
+summoner_riot_ids = [
+    {"game_name": "AshyBoyy", "tag_line": "NA1"},
+    {"game_name": "Gunyong", "tag_line": "0063"},
+    {"game_name": "ChubbyPug", "tag_line": "NA1"}
 ]
 
 # Step 1: Get PUUIDs
-name_to_puuid = {name: get_puuid(name) for name in summoner_names}
-puuid_to_name = {v: k for k, v in name_to_puuid.items()}
+name_to_puuid = {
+    f"{summoner['game_name']}#{summoner['tag_line']}": get_puuid(summoner['game_name'], summoner['tag_line'])
+    for summoner in summoner_riot_ids
+}
+puuid_to_name = {v: k for k, v in name_to_puuid.items() if v is not None}
 
 # Step 2: Track shared games and wins
 winrate_data = defaultdict(lambda: defaultdict(lambda: {"games": 0, "wins": 0}))
 
 # Step 3: Analyze matches
-for name, puuid in puuids.items():
+for name, puuid in name_to_puuid.items():
     print(f"Processing matches for {name}...")
     match_ids = get_match_ids(puuid, count=50)
+
     for match_id in match_ids:
-        match_data = get_match_data(match_id)
-        if not match_data:
-            continue  # skip if we couldn't get match data
-        try:
-            participants = match_data['metadata']['participants']
-            # your logic using participants here
-        except KeyError:
-            print(f"Skipping match {match_id} - missing 'metadata'")
+        match = get_match_data(match_id)
         time.sleep(1.2)  # To avoid rate limits
 
         participants = match['metadata']['participants']
@@ -69,8 +66,8 @@ for name, puuid in puuids.items():
 
 # Step 4: Print result
 print("\nWinrate Matrix:")
-for name1 in summoner_names:
-    for name2 in summoner_names:
+for name1 in name_to_puuid.keys():
+    for name2 in name_to_puuid.keys():
         if name1 == name2:
             continue
         data = winrate_data[name1][name2]
