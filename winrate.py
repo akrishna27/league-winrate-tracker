@@ -13,7 +13,7 @@ HEADERS = {"X-Riot-Token": API_KEY}
 summoner_names = [
     "AshyBoyy",
     "Gunyong",
-    "ChubbyPug",
+    "ChubbyPug"
 ]
 
 # Step 1: Get PUUIDs
