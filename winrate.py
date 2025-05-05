@@ -17,19 +17,25 @@ summoner_names = [
 ]
 
 # Step 1: Get PUUIDs
-name_to_puuid = {name: get_puuid(name, HEADERS) for name in summoner_names}
+name_to_puuid = {name: get_puuid(name) for name in summoner_names}
 puuid_to_name = {v: k for k, v in name_to_puuid.items()}
 
 # Step 2: Track shared games and wins
 winrate_data = defaultdict(lambda: defaultdict(lambda: {"games": 0, "wins": 0}))
 
 # Step 3: Analyze matches
-for name, puuid in name_to_puuid.items():
+for name, puuid in puuids.items():
     print(f"Processing matches for {name}...")
-    match_ids = get_match_ids(puuid, HEADERS, count=50)
-
+    match_ids = get_match_ids(puuid, count=50)
     for match_id in match_ids:
-        match = get_match_data(match_id, HEADERS)
+        match_data = get_match_data(match_id)
+        if not match_data:
+            continue  # skip if we couldn't get match data
+        try:
+            participants = match_data['metadata']['participants']
+            # your logic using participants here
+        except KeyError:
+            print(f"Skipping match {match_id} - missing 'metadata'")
         time.sleep(1.2)  # To avoid rate limits
 
         participants = match['metadata']['participants']

@@ -15,10 +15,10 @@ HEADERS = {"X-Riot-Token": API_KEY}
 REGION = "na1"  # Change this to the appropriate region if needed
 
 def get_puuid(summoner_name):
-    """Retrieve the PUUID for a given summoner."""
-    url = f"https://{REGION}.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summoner_name}"
+    url = f"https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/{summoner_name}"
     res = requests.get(url, headers=HEADERS)
     return res.json().get("puuid")
+
 
 def get_match_ids(puuid, count=20):
     """Retrieve a list of match IDs for a given PUUID."""
@@ -27,7 +27,11 @@ def get_match_ids(puuid, count=20):
     return res.json()
 
 def get_match_data(match_id):
-    """Retrieve match data for a given match ID."""
-    url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+    url = f"https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}"
     res = requests.get(url, headers=HEADERS)
-    return res.json()
+    if res.status_code == 200:
+        return res.json()
+    else:
+        print(f"Failed to get match data for {match_id}: {res.status_code} - {res.text}")
+        return None
+
