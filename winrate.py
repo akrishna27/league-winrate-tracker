@@ -80,12 +80,35 @@ for name, puuid in name_to_puuid.items():
 # Step 4: Print result
 print("\nWinrate Matrix:")
 riot_ids = list(name_to_puuid.keys())  # Convert keys to a list for indexed iteration
+processed_pairs = set()  # Track pairs that have already been printed
 
-for i in range(len(riot_ids)):
-    for j in range(i + 1, len(riot_ids)):  # Start the inner loop after the current index of the outer loop
-        name1 = riot_ids[i]
-        name2 = riot_ids[j]
-        data = winrate_data[name1][name2]
-        if data['games'] > 0:
-            winrate = 100 * data['wins'] / data['games']
-            print(f"{name1} + {name2}: {data['wins']}W / {data['games']}G ({winrate:.1f}%)")
+# Loop through all combinations of Riot IDs
+for name1 in riot_ids:
+    for name2 in riot_ids:
+        if name1 == name2:  # Skip self-combinations
+            continue
+
+        # Ensure the pair is only processed once if winrates are identical
+        pair = tuple(sorted([name1, name2]))  # Sort the pair to avoid duplicates
+        if pair in processed_pairs:
+            continue
+
+        # Get winrate data for both perspectives
+        data1 = winrate_data[name1][name2]
+        data2 = winrate_data[name2][name1]
+
+        # Check if winrate data is identical
+        if data1 == data2:
+            if data1['games'] > 0:
+                winrate = 100 * data1['wins'] / data1['games']
+                print(f"{name1} + {name2}: {data1['wins']}W / {data1['games']}G ({winrate:.1f}%)")
+            processed_pairs.add(pair)  # Mark the pair as processed
+        else:
+            # Print both perspectives if winrate data differs
+            if data1['games'] > 0:
+                winrate1 = 100 * data1['wins'] / data1['games']
+                print(f"{name1} + {name2}: {data1['wins']}W / {data1['games']}G ({winrate1:.1f}%)")
+            if data2['games'] > 0:
+                winrate2 = 100 * data2['wins'] / data2['games']
+                print(f"{name2} + {name1}: {data2['wins']}W / {data2['games']}G ({winrate2:.1f}%)")
+            processed_pairs.add(pair)  # Mark the pair as processed
