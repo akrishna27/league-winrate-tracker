@@ -1,6 +1,7 @@
 import requests
 import os
 from dotenv import load_dotenv
+import json
 
 # Load environment variables from .env
 load_dotenv()
@@ -37,10 +38,28 @@ def get_match_ids(puuid, count=20):
         return None
 
 def get_match_data(match_id):
-    url = f"https://{REGION}.api.riotgames.com/lol/match/v5/matches/{match_id}"
+    cache_path = f"cache/{match_id}.json"
+
+    # Try to load from cache first
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, ValueError):
+            print(f"Cache file {cache_path} is invalid. Re-fetching from API...")
+            # If the cache is invalid, delete the file and fetch from the API
+            os.remove(cache_path)
+
+    # Otherwise fetch from API
+    url = f"https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}"
     res = requests.get(url, headers=HEADERS)
     if res.status_code == 200:
-        return res.json()
+        match_data = res.json()
+        # Save to cache
+        os.makedirs("cache", exist_ok=True)  # Ensure the cache directory exists
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(match_data, f, indent=2)
+        return match_data
     else:
         print(f"Failed to get match data for {match_id}: {res.status_code} - {res.text}")
         return None
